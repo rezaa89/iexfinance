@@ -59,19 +59,22 @@ class HistoricalReader(StockReader):
     def _output_format(self, out, fmt_j=None, fmt_p=None):
         result = {}
         for symbol in self.symbols:
-            if symbol not in out or not out[symbol]["chart"]:
-                raise IEXSymbolError(symbol)
-            d = out.pop(symbol)["chart"]
-            df = pd.DataFrame(d)
-            if self.output_format == 'pandas':
-                df["date"] = pd.DatetimeIndex(df["date"])
-            df = df.set_index(df["date"])
-            values = ["open", "high", "low", "close", "volume"]
-            df = df[values]
-            sstart = self.start.strftime('%Y-%m-%d')
-            send = self.end.strftime('%Y-%m-%d')
-            df = df.loc[sstart:send]
-            result.update({symbol: df})
+            try:
+                if symbol not in out or not out[symbol]["chart"]:
+                    raise IEXSymbolError(symbol)
+                d = out.pop(symbol)["chart"]
+                df = pd.DataFrame(d)
+                if self.output_format == 'pandas':
+                    df["date"] = pd.DatetimeIndex(df["date"])
+                df = df.set_index(df["date"])
+                values = ["open", "high", "low", "close", "volume"]
+                df = df[values]
+                sstart = self.start.strftime('%Y-%m-%d')
+                send = self.end.strftime('%Y-%m-%d')
+                df = df.loc[sstart:send]
+                result.update({symbol: df})
+            except:
+                continue;
         if self.output_format is "pandas":
             if len(result) > 1:
                 result = pd.concat(result.values(), keys=result.keys(), axis=1)
